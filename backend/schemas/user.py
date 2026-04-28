@@ -67,3 +67,8 @@ class UserDashboard(BaseModel):
     upcoming_trips: List[BookingSummary]
     recent_bookings: List[BookingSummary]
     recent_reviews: List[ReviewSummary]
+
+
+# Aliases for route handlers
+UserProfile = User
+UserUpdate = UserProfileUpdate

@@ -1,12 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models.users import User, Author
+from models.users import User, Author, Admin
 from schemas.user import UserCreate
 from config.security import get_password_hash, verify_password
 
 class AuthService:
     async def get_user_by_email(self, db: AsyncSession, email: str):
         result = await db.execute(select(User).filter(User.email == email))
+        return result.scalars().first()
+
+    async def get_admin_by_email(self, db: AsyncSession, email: str):
+        result = await db.execute(select(Admin).filter(Admin.email == email))
         return result.scalars().first()
 
     async def register_user(self, db: AsyncSession, user_data: UserCreate):
@@ -33,6 +37,19 @@ class AuthService:
         await db.refresh(new_user)
         return new_user
 
+    async def register_admin(self, db: AsyncSession, email: str, password: str):
+        # Check if admin already exists
+        existing_admin = await self.get_admin_by_email(db, email)
+        if existing_admin:
+            return None
+
+        hashed_password = get_password_hash(password)
+        new_admin = Admin(email=email, password=hashed_password)
+        db.add(new_admin)
+        await db.commit()
+        await db.refresh(new_admin)
+        return new_admin
+
     async def authenticate_user(self, db: AsyncSession, email: str, password: str):
         # 1. Use 'result' instead of 'user' for the raw DB execution
         db_user = await self.get_user_by_email(db, email)
@@ -48,5 +65,11 @@ class AuthService:
         result = await db.execute(select(Author).filter(Author.email == email))
         db_author = result.scalars().first()
         return db_author
+
+    async def authenticate_admin(self, db: AsyncSession, email: str, password: str):
+        db_admin = await self.get_admin_by_email(db, email)
+        if not db_admin or not verify_password(password, str(db_admin.password)):
+            return None
+        return db_admin
 
 auth_service = AuthService()

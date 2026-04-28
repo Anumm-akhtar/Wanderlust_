@@ -5,10 +5,36 @@ from sqlalchemy import select
 
 from config.database import get_db
 from config.security import decode_access_token
-from models.users import User, Author
+from models.users import User, Author, Admin
 from services.auth import auth_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+async def get_current_admin(
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+) -> Admin:
+    payload = decode_access_token(token)
+    email = payload.get("sub")
+    role = payload.get("role")
+    if not email or role != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    result = await db.execute(select(Admin).filter(Admin.email == email))
+    admin = result.scalars().first()
+    
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Admin not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return admin
 
 async def get_current_author(
     db: AsyncSession = Depends(get_db),

@@ -20,9 +20,32 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         )
     return user
 
+@router.post("/admin/register")
+async def register_admin(
+    email: str,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    admin = await auth_service.register_admin(db, email, password)
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Admin email already registered",
+        )
+    return {"message": "Admin registered successfully"}
+
 @router.post("/login", response_model=Token)
 async def login_for_access_token(db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
-    # First, check if it's an author
+    # First, check if it's an admin
+    admin = await auth_service.authenticate_admin(db, email=form_data.username, password=form_data.password)
+    if admin:
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": admin.email, "role": "Admin"}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    # Then, check if it's an author
     author = await auth_service.authenticate_author(db, email=form_data.username)
     if author:
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

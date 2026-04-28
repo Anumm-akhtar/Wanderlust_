@@ -155,3 +155,40 @@ async def add_comment(
     await db.refresh(new_comment)
     
     return CommentResponse.model_validate(new_comment)
+
+
+@router.delete("/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_blog(
+    blog_id: int,
+    db: AsyncSession = Depends(get_db),
+    author: Author = Depends(get_current_author),
+):
+    result = await db.execute(select(Blog).filter(Blog.blog_id == blog_id))
+    blog = result.scalars().first()
+    if not blog:
+        raise HTTPException(status_code=404, detail="Blog not found")
+    if blog.author_id != author.author_id:
+        raise HTTPException(status_code=403, detail="Cannot delete someone else's blog")
+
+    await db.delete(blog)
+    await db.commit()
+    return None
+
+
+@router.delete("/{blog_id}/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_comment(
+    blog_id: int,
+    comment_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    result = await db.execute(select(Comment).filter(Comment.cmnt_id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.user_id != user.userID:
+        raise HTTPException(status_code=403, detail="Cannot delete someone else's comment")
+
+    await db.delete(comment)
+    await db.commit()
+    return None

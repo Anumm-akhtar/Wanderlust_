@@ -26,6 +26,18 @@ class DestinationBase(BaseModel):
     description: Optional[str] = None
 
 
+class DestinationCreate(DestinationBase):
+    destName: str  # Required for creation
+    price: float  # Required for creation
+
+
+class DestinationUpdate(BaseModel):
+    destName: Optional[str] = None
+    image: Optional[str] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+
+
 class DestinationResponse(DestinationBase):
     dest_id: int
 
@@ -39,6 +51,18 @@ class DestinationDetails(BaseModel):
 
 
 class PackageBase(BaseModel):
+    name: Optional[str] = None
+    image: Optional[str] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+
+
+class PackageCreate(PackageBase):
+    name: str  # Required for creation
+    price: float  # Required for creation
+
+
+class PackageUpdate(BaseModel):
     name: Optional[str] = None
     image: Optional[str] = None
     price: Optional[float] = None

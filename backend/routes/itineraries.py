@@ -13,6 +13,7 @@ from schemas.travel import (
     DestinationResponse,
     ItineraryDetails,
     ItineraryResponse,
+    ItineraryCreate,
 )
 from services.dependencies import get_current_user
 
@@ -31,6 +32,23 @@ async def list_itineraries(
     )
     itineraries = result.scalars().all()
     return [ItineraryResponse.model_validate(i) for i in itineraries]
+
+
+@router.post("/", response_model=ItineraryResponse, status_code=status.HTTP_201_CREATED)
+async def create_itinerary(
+    payload: ItineraryCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    itinerary = Itinerary(
+        user_id=user.userID,
+        itinerary_name=payload.itinerary_name,
+        price=Decimal("0"),
+    )
+    db.add(itinerary)
+    await db.commit()
+    await db.refresh(itinerary)
+    return ItineraryResponse.model_validate(itinerary)
 
 
 @router.get("/{itinerary_id}", response_model=ItineraryDetails)
@@ -140,3 +158,51 @@ async def add_destination_to_itinerary(
 
     # Return updated itinerary details
     return await get_itinerary(itinerary.itinerary_id, db, user)
+
+
+@router.put("/{itinerary_id}", response_model=ItineraryResponse)
+async def update_itinerary(
+    itinerary_id: int,
+    payload: ItineraryCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Itinerary).where(
+            Itinerary.itinerary_id == itinerary_id, Itinerary.user_id == user.userID
+        )
+    )
+    itinerary = result.scalars().first()
+    if not itinerary:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
+        )
+
+    if payload.itinerary_name:
+        itinerary.itinerary_name = payload.itinerary_name
+
+    await db.commit()
+    await db.refresh(itinerary)
+    return ItineraryResponse.model_validate(itinerary)
+
+
+@router.delete("/{itinerary_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_itinerary(
+    itinerary_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Itinerary).where(
+            Itinerary.itinerary_id == itinerary_id, Itinerary.user_id == user.userID
+        )
+    )
+    itinerary = result.scalars().first()
+    if not itinerary:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
+        )
+
+    await db.delete(itinerary)
+    await db.commit()
+    return None
