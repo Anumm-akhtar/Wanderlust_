@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.database import engine, Base
-from routes import auth
+from routes import auth, account, booking, destinations_packages, itineraries, blogs, reviews, wishlists
 
 app = FastAPI()
 
@@ -16,6 +16,13 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(account.router, prefix="/account", tags=["account"])
+app.include_router(booking.router, prefix="/bookings", tags=["bookings"])
+app.include_router(destinations_packages.router, tags=["destinations_packages"])
+app.include_router(itineraries.router, prefix="/itineraries", tags=["itineraries"])
+app.include_router(blogs.router, prefix="/blogs", tags=["blogs"])
+app.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
+app.include_router(wishlists.router, prefix="/wishlists", tags=["wishlists"])
 
 @app.on_event("startup")
 async def startup():

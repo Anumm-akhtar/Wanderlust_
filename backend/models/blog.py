@@ -1,40 +1,47 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from __future__ import annotations
+
+from datetime import datetime
+from typing import List, Optional, TYPE_CHECKING
+from sqlalchemy import Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from config.database import Base
+
+if TYPE_CHECKING:
+    from .users import User, Author
 
 class Blog(Base):
     __tablename__ = "blogs"
 
-    blog_id = Column(Integer, primary_key=True, index=True)
-    author_id = Column(Integer, ForeignKey("authors.author_id"))
-    title = Column(String)
-    content = Column(Text)
-    publication_date = Column(DateTime)
-    like_count = Column(Integer, nullable=True)
+    blog_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    author_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("authors.author_id"), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    publication_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    like_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
-    author = relationship("Author", back_populates="blogs")
-    comments = relationship("Comment", back_populates="blog")
-    likes = relationship("BlogLike", back_populates="blog")
+    author: Mapped[Optional["Author"]] = relationship("Author", back_populates="blogs")
+    comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="blog")
+    likes: Mapped[List["BlogLike"]] = relationship("BlogLike", back_populates="blog")
 
 class BlogLike(Base):
     __tablename__ = "blog_likes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    blog_id = Column(Integer, ForeignKey("blogs.blog_id"))
-    user_id = Column(Integer, ForeignKey("users.userID"))
-    like_date = Column(DateTime)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    blog_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("blogs.blog_id"), nullable=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.userID"), nullable=True)
+    like_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    blog = relationship("Blog", back_populates="likes")
-    user = relationship("User", back_populates="blog_likes")
+    blog: Mapped[Optional["Blog"]] = relationship("Blog", back_populates="likes")
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="blog_likes")
 
 class Comment(Base):
     __tablename__ = "comments"
 
-    cmnt_id = Column(Integer, primary_key=True, index=True)
-    blog_id = Column(Integer, ForeignKey("blogs.blog_id"))
-    content = Column(Text)
-    user_id = Column(Integer, ForeignKey("users.userID"))
-    date_posted = Column(DateTime)
+    cmnt_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    blog_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("blogs.blog_id"), nullable=True)
+    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.userID"), nullable=True)
+    date_posted: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    blog = relationship("Blog", back_populates="comments")
-    user = relationship("User", back_populates="comments")
+    blog: Mapped[Optional["Blog"]] = relationship("Blog", back_populates="comments")
+    user: Mapped[Optional["User"]] = relationship("User", back_populates="comments")

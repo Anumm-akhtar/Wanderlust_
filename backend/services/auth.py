@@ -5,6 +5,10 @@ from schemas.user import UserCreate
 from config.security import get_password_hash, verify_password
 
 class AuthService:
+    async def get_user_by_email(self, db: AsyncSession, email: str):
+        result = await db.execute(select(User).filter(User.email == email))
+        return result.scalars().first()
+
     async def register_user(self, db: AsyncSession, user_data: UserCreate):
         # Check if user or author with this email already exists
         result_user = await db.execute(select(User).filter(User.email == user_data.email))
@@ -31,8 +35,7 @@ class AuthService:
 
     async def authenticate_user(self, db: AsyncSession, email: str, password: str):
         # 1. Use 'result' instead of 'user' for the raw DB execution
-        result = await db.execute(select(User).filter(User.email == email))
-        db_user = result.scalars().first()
+        db_user = await self.get_user_by_email(db, email)
         
         # 2. Wrap db_user.password in str() to satisfy the type checker
         if not db_user or not verify_password(password, str(db_user.password)):
