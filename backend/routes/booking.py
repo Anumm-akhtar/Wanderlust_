@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, cast
 from decimal import Decimal
 
@@ -25,6 +25,14 @@ from schemas.booking import (
 from services.dependencies import get_current_user
 
 router = APIRouter()
+
+
+def normalize_datetime(value: Optional[datetime]) -> Optional[datetime]:
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
 
 
 def to_booking_response(booking: Booking) -> BookingResponse:
@@ -152,8 +160,8 @@ async def book_itinerary(
     booking = Booking(
         bk_type="itinerary",
         trip_id=payload.itinerary_id,
-        travel_start_date=payload.travel_start_date,
-        travel_end_date=payload.travel_end_date,
+        travel_start_date=normalize_datetime(payload.travel_start_date),
+        travel_end_date=normalize_datetime(payload.travel_end_date),
         numtravelers=payload.numtravelers,
         bk_cost=total_cost,
         user_id=user.userID,
@@ -201,8 +209,8 @@ async def create_booking(
     booking = Booking(
         bk_type=bk_type,
         trip_id=payload.trip_id,
-        travel_start_date=payload.travel_start_date,
-        travel_end_date=payload.travel_end_date,
+        travel_start_date=normalize_datetime(payload.travel_start_date),
+        travel_end_date=normalize_datetime(payload.travel_end_date),
         numtravelers=payload.numtravelers,
         bk_cost=bk_cost,
         user_id=user.userID,

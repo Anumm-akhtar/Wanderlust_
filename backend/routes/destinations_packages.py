@@ -179,6 +179,26 @@ async def delete_package(
 
 # ========== PACKAGE-DESTINATION ASSOCIATIONS ==========
 
+@router.get("/packages/{pkg_id}/destinations", response_model=List[DestinationResponse])
+async def get_package_destinations(pkg_id: int, db: AsyncSession = Depends(get_db)):
+    pkg_result = await db.execute(select(Package).where(Package.pkg_id == pkg_id))
+    if not pkg_result.scalars().first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Package not found")
+
+    pd_result = await db.execute(
+        select(PackageDestination).where(PackageDestination.pkg_id == pkg_id)
+    )
+    dest_ids = [pd.dest_id for pd in pd_result.scalars().all()]
+
+    if not dest_ids:
+        return []
+
+    dest_result = await db.execute(
+        select(Destination).where(Destination.dest_id.in_(dest_ids))
+    )
+    return [DestinationResponse.model_validate(d) for d in dest_result.scalars().all()]
+
+
 @router.post("/packages/{pkg_id}/destinations/{dest_id}", status_code=status.HTTP_201_CREATED)
 async def add_destination_to_package(
     pkg_id: int,
