@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
+import BlogAuthorLayout from "./BlogAuthorLayout";
 import UserLayout from "./UserLayout";
 import NotFound from "../components/Layout/NotFound";
 import type { RootState } from "../store/store";
@@ -37,8 +38,8 @@ const ProtectedRoutes = () => {
     switch (userState.role) {
       case "Admin":
         return <AdminLayout />;
-      //   case "Author":
-      //     return <BlogAuthorLayout />;
+      case "Author":
+        return <BlogAuthorLayout />;
       case "User":
         return <UserLayout />;
       default:

@@ -11,6 +11,7 @@ const BookingDetail = lazy(() => import("../screens/user/Bookings/BookingDetail"
 const Wishlist = lazy(() => import("../screens/user/Wishlist/Wishlist"));
 const Itineraries = lazy(() => import("../screens/user/Itineraries/Itineraries"));
 const ItineraryDetail = lazy(() => import("../screens/user/Itineraries/ItineraryDetail"));
+const Blogs = lazy(() => import("../screens/user/Blogs/Blogs"));
 
 const UserLayout = () => {
   return (
@@ -35,6 +36,7 @@ const UserLayout = () => {
             <Route path="wishlist" element={<Wishlist />} />
             <Route path="itineraries" element={<Itineraries />} />
             <Route path="itineraries/:id" element={<ItineraryDetail />} />
+            <Route path="blogs" element={<Blogs />} />
             <Route path="*" element={<Navigate to="browse" replace />} />
           </Routes>
         </Suspense>

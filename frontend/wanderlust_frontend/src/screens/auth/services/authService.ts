@@ -38,6 +38,21 @@ export const authService = {
     return response.data;
   },
 
+  registerAuthor: async (data: RegisterPayload) => {
+    const params = new URLSearchParams();
+    params.append("email", data.email);
+    params.append("password", data.password);
+    params.append("firstName", data.firstName);
+    params.append("lastName", data.lastName);
+
+    const response = await apiClient.post("/auth/author/register", params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem("access_token");
   },

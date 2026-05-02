@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import timedelta
@@ -22,8 +22,8 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/admin/register")
 async def register_admin(
-    email: str,
-    password: str,
+    email: str = Form(...),
+    password: str = Form(...),
     db: AsyncSession = Depends(get_db)
 ):
     admin = await auth_service.register_admin(db, email, password)
@@ -33,6 +33,22 @@ async def register_admin(
             detail="Admin email already registered",
         )
     return {"message": "Admin registered successfully"}
+
+@router.post("/author/register")
+async def register_author(
+    email: str = Form(...),
+    password: str = Form(...),
+    firstName: str = Form(...),
+    lastName: str = Form(...),
+    db: AsyncSession = Depends(get_db)
+):
+    author = await auth_service.register_author(db, email, password, firstName, lastName)
+    if not author:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Author email already registered",
+        )
+    return {"message": "Author registered successfully"}
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
@@ -46,7 +62,7 @@ async def login_for_access_token(db: AsyncSession = Depends(get_db), form_data: 
         return {"access_token": access_token, "token_type": "bearer"}
 
     # Then, check if it's an author
-    author = await auth_service.authenticate_author(db, email=form_data.username)
+    author = await auth_service.authenticate_author(db, email=form_data.username, password=form_data.password)
     if author:
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(

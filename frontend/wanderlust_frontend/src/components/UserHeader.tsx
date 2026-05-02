@@ -6,6 +6,7 @@ import {
   CalendarOutlined,
   HeartOutlined,
   UnorderedListOutlined,
+  ReadOutlined,
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -19,6 +20,7 @@ const ACCENT = "#aa3bff";
 const navLinks = [
   { label: "Browse", path: "/browse", icon: SearchOutlined },
   { label: "Itineraries", path: "/itineraries", icon: UnorderedListOutlined },
+  { label: "Blogs", path: "/blogs", icon: ReadOutlined },
   { label: "My Bookings", path: "/bookings", icon: CalendarOutlined },
   { label: "Wishlist", path: "/wishlist", icon: HeartOutlined },
 ];

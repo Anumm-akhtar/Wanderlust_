@@ -50,6 +50,28 @@ class AuthService:
         await db.refresh(new_admin)
         return new_admin
 
+    async def register_author(self, db: AsyncSession, email: str, password: str, firstName: str = None, lastName: str = None):
+        # Check if author or user with this email already exists
+        result_author = await db.execute(select(Author).filter(Author.email == email))
+        if result_author.scalars().first():
+            return None
+        
+        result_user = await db.execute(select(User).filter(User.email == email))
+        if result_user.scalars().first():
+            return None
+
+        hashed_password = get_password_hash(password)
+        new_author = Author(
+            email=email,
+            password=hashed_password,
+            firstName=firstName,
+            lastName=lastName
+        )
+        db.add(new_author)
+        await db.commit()
+        await db.refresh(new_author)
+        return new_author
+
     async def authenticate_user(self, db: AsyncSession, email: str, password: str):
         # 1. Use 'result' instead of 'user' for the raw DB execution
         db_user = await self.get_user_by_email(db, email)
@@ -60,10 +82,11 @@ class AuthService:
             
         return db_user
 
-    async def authenticate_author(self, db: AsyncSession, email: str):
-        # Cleaning up the variable names here too for good measure
+    async def authenticate_author(self, db: AsyncSession, email: str, password: str):
         result = await db.execute(select(Author).filter(Author.email == email))
         db_author = result.scalars().first()
+        if not db_author or not verify_password(password, str(db_author.password)):
+            return None
         return db_author
 
     async def authenticate_admin(self, db: AsyncSession, email: str, password: str):

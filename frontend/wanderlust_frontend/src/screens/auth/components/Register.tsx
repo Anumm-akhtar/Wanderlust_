@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Form, Input, Button, Alert } from "antd";
+import { Form, Input, Button, Alert, Segmented } from "antd";
 import {
   MailOutlined,
   LockOutlined,
   UserOutlined,
   CompassOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { authService } from "../services/authService";
 import {
@@ -23,6 +25,7 @@ export default function Register() {
   const { error, loading } = useSelector(
     (state: RootState) => state.auth,
   ) as AuthState;
+  const [registrationType, setRegistrationType] = useState<"user" | "author">("user");
 
   const handleSubmit = async (values: {
     firstName: string;
@@ -34,12 +37,21 @@ export default function Register() {
     dispatch(clearError());
     dispatch(setLoading(true));
     try {
-      await authService.register({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        password: values.password,
-      });
+      if (registrationType === "author") {
+        await authService.registerAuthor({
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          password: values.password,
+        });
+      } else {
+        await authService.register({
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          password: values.password,
+        });
+      }
       dispatch(
         setRegisterSuccess({
           email: values.email,
@@ -144,9 +156,20 @@ export default function Register() {
           </div>
 
           <h2 className="text-2xl font-bold text-slate-800 mb-1">Create account</h2>
-          <p className="text-slate-400 text-sm mb-8">
+          <p className="text-slate-400 text-sm mb-6">
             Start your adventure — it only takes a minute.
           </p>
+
+          <Segmented
+            value={registrationType}
+            onChange={(val) => setRegistrationType(val as "user" | "author")}
+            options={[
+              { label: <span className="flex items-center gap-2"><UserOutlined />Traveler</span>, value: "user" },
+              { label: <span className="flex items-center gap-2"><EditOutlined />Author</span>, value: "author" },
+            ]}
+            block
+            className="mb-8"
+          />
 
           {error && <Alert message={error} type="error" showIcon className="mb-5" />}
 
